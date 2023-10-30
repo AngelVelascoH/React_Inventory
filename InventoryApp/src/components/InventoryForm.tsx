@@ -29,7 +29,7 @@ interface FormData {
   address: string;
 }
 export const InventoryForm = () => {
-  const [createItem, { loading, error }] = useMutation(INSERT_ITEM, {
+  const [createItem, { loading }] = useMutation(INSERT_ITEM, {
     errorPolicy: "all",
   });
   const navigate = useNavigate();

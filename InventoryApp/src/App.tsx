@@ -26,7 +26,6 @@ const App: React.FC = () => {
   return (
     <ApolloProvider client={client}>
       <Header />
-
       <Container maxWidth="xl">
         <Paper square={false} elevation={3} sx={{ padding: 2 }}>
           <Box

@@ -55,7 +55,7 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
     event: React.MouseEvent<HTMLButtonElement> | null,
     newPage: number
   ) => {
-    setPage(newPage);
+    if (event !== null) setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
@@ -84,18 +84,19 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
   const handleClose = () => {
     setOpen(false);
   };
-  const deleteItemDialog = () => {
+  const deleteItemDialog = (id: number) => {
     console.log("delete");
-    console.log(itemId);
+    console.log(id);
+    setItemId(id);
     setOpen(true);
   };
 
-  const deleteSpecificItem = () => {
-    console.log(itemId);
+  const deleteSpecificItem = (id: number) => {
+    console.log(id);
     try {
       deleteItem({
         variables: {
-          itemId: itemId,
+          itemId: id,
         },
       });
     } catch (error) {
@@ -103,6 +104,9 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
     }
     setOpen(false);
     context.setRefreshValue(true);
+    if (filteredData.length >= rowsPerPage && page !== 0) {
+      setPage(page - 1);
+    }
     navigate("/items");
   };
 
@@ -167,7 +171,7 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
                     </DialogContent>
                     <DialogActions>
                       <Button
-                        onClick={() => deleteSpecificItem()}
+                        onClick={() => deleteSpecificItem(itemId)}
                         variant="outlined"
                         color="error"
                       >
@@ -194,8 +198,7 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
                   <TableCell align="center">
                     <IconButton
                       onClick={() => {
-                        setItemId(row.itemId);
-                        deleteItemDialog();
+                        deleteItemDialog(row.itemId);
                       }}
                     >
                       <DeleteForeverIcon
