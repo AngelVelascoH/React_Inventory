@@ -10,13 +10,13 @@ import { useEffect } from "react";
 
 export const InventoryContent = () => {
   const context = useData();
-  const { loading, error, data } = useQuery(GET_DATA);
-
+  let { loading, error, data, refetch } = useQuery(GET_DATA);
   useEffect(() => {
-    if (!loading && !error) {
-      context.setData(data.Items.length);
+    if (context.refresh) {
+      context.setRefreshValue(false);
+      refetch();
     }
-  }, [context.data, context.searchTerm, loading, error, data]);
+  }, [context.refresh]);
 
   if (loading) return <p>Loading...</p>;
 

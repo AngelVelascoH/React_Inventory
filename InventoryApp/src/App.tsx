@@ -35,34 +35,36 @@ const App: React.FC = () => {
             alignItems="center"
             // Ajusta la altura como desees
           >
-            <Routes>
-              <Route
-                path="/newItem"
-                element={
-                  <>
-                    <FormHeader onChildClick={showItems} />
-                    <InventoryForm />
-                  </>
-                }
-              />
-              <Route
-                path="/items"
-                element={
-                  <DataProvider>
-                    <ContentHeader onChildClick={showForm} />
-                    <InventoryContent />
-                  </DataProvider>
-                }
-              />
-              <Route
-                path="/item/:id/detail"
-                element={
-                  <>
-                    <ItemDetail onChildClick={showItems} />
-                  </>
-                }
-              ></Route>
-            </Routes>
+            <DataProvider>
+              <Routes>
+                <Route
+                  path="/newItem"
+                  element={
+                    <>
+                      <FormHeader onChildClick={showItems} />
+                      <InventoryForm />
+                    </>
+                  }
+                />
+                <Route
+                  path="/items"
+                  element={
+                    <>
+                      <ContentHeader onChildClick={showForm} />
+                      <InventoryContent />
+                    </>
+                  }
+                />
+                <Route
+                  path="/item/:id/detail"
+                  element={
+                    <>
+                      <ItemDetail onChildClick={showItems} />
+                    </>
+                  }
+                ></Route>
+              </Routes>
+            </DataProvider>
           </Box>
         </Paper>
       </Container>

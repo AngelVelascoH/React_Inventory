@@ -57,34 +57,81 @@ const yoga = createYoga({
         findItemByName: (parent, args) => {},
       },
       Mutation: {
-        createItem: (parent, args) => {
-          const {
-            itemId,
-            itemName,
-            description,
-            locationId,
-            state,
-            address,
-            phoneNumber,
-          } = args;
-          const newItem = {
-            itemId,
-            itemName,
-            description,
-            location: {
+        createItem: async (parent, args) => {
+          try {
+            const {
+              itemId,
+              itemName,
+              description,
               locationId,
               state,
               address,
               phoneNumber,
-            },
-          };
-          return fetch(`${baseURL}/items`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newItem),
-          }).then((res) => res.json());
+            } = args;
+            const newItem = {
+              itemId,
+              itemName,
+              description,
+              location: {
+                locationId,
+                state,
+                address,
+                phoneNumber,
+              },
+            };
+            const response = await fetch(`${baseURL}/items`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(newItem),
+            });
+
+            if (response.status === 409 || response.status === 400) {
+              console.log("llegamos aqui");
+              return {
+                itemId: -1,
+                itemName: "",
+                description: "",
+                location: {
+                  locationId: -1,
+                  state: "",
+                  address: "",
+                  phoneNumber: "",
+                },
+              };
+            } else {
+              const data = await response.json();
+              return data;
+            }
+          } catch (error) {
+            throw new Error(error.message);
+          }
+        },
+        deleteItem: async (parent, args) => {
+          try {
+            const { itemId } = args;
+            const response = await fetch(`${baseURL}/items/${itemId}`, {
+              method: "DELETE",
+            });
+            if (response.status === 404) {
+              return {
+                itemId: -1,
+                itemName: "",
+                description: "",
+                location: {
+                  locationId: -1,
+                  state: "",
+                  address: "",
+                  phoneNumber: "",
+                },
+              };
+            } else {
+              return null;
+            }
+          } catch (error) {
+            throw new Error(error.message);
+          }
         },
       },
     },

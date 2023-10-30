@@ -14,6 +14,18 @@ import { IconButton } from "@mui/material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useData } from "../context/context";
+import { useEffect } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+import DELETE from "../apollo/deleteItem";
+import { useMutation } from "@apollo/client";
+
 interface Location {
   state: string;
   address: string;
@@ -31,10 +43,14 @@ interface TableProps {
 }
 
 export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
+  const context = useData();
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [itemId, setItemId] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const [deleteItem] = useMutation(DELETE);
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
     newPage: number
@@ -64,6 +80,36 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
       return item;
     }
   });
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const deleteItemDialog = () => {
+    console.log("delete");
+    console.log(itemId);
+    setOpen(true);
+  };
+
+  const deleteSpecificItem = () => {
+    console.log(itemId);
+    try {
+      deleteItem({
+        variables: {
+          itemId: itemId,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    setOpen(false);
+    context.setRefreshValue(true);
+    navigate("/items");
+  };
+
+  useEffect(() => {
+    context.setData(filteredData.length);
+  }, [context.data, context.searchTerm, filteredData]);
+
   return (
     <>
       <TableContainer component={Paper}>
@@ -102,6 +148,40 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
                   key={row.itemId}
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
+                  <Dialog
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                  >
+                    <DialogTitle id="alert-dialog-title">
+                      <Typography variant="h4" component={"p"}>
+                        "¿Estas seguro que desesas eliminar el item {itemId}
+                        ?"
+                      </Typography>
+                    </DialogTitle>
+                    <DialogContent>
+                      <DialogContentText id="alert-dialog-description">
+                        Una vez que el Item se elimine, no se podrá recuperar.
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button
+                        onClick={() => deleteSpecificItem()}
+                        variant="outlined"
+                        color="error"
+                      >
+                        Si, Eliminar
+                      </Button>
+                      <Button
+                        onClick={handleClose}
+                        variant="outlined"
+                        color="info"
+                      >
+                        No, Regresar
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
                   <TableCell>
                     <Button
                       variant="outlined"
@@ -112,7 +192,12 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
                   </TableCell>
                   <TableCell align="left">{row.itemName}</TableCell>
                   <TableCell align="center">
-                    <IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setItemId(row.itemId);
+                        deleteItemDialog();
+                      }}
+                    >
                       <DeleteForeverIcon
                         sx={{ width: "30px", height: "30px" }}
                         color="error"

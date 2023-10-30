@@ -6,7 +6,6 @@ import { Box } from "@mui/system";
 import { IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Tooltip } from "@mui/material";
-import { Paper } from "@mui/material";
 import GET_ALL_DATA from "../apollo/fetchAllDataofItem";
 import { useQuery } from "@apollo/client";
 import { Grid } from "@mui/material";

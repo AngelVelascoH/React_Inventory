@@ -1,8 +1,24 @@
-import { Container, Grid, TextField, Button, Typography } from "@mui/material";
+import {
+  Container,
+  Grid,
+  TextField,
+  Button,
+  Typography,
+  AlertColor,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { useMutation } from "@apollo/client";
 import INSERT_ITEM from "../apollo/InsertData";
 import { useState } from "react";
+import { Alert } from "@mui/material";
+import { Dialog } from "@mui/material";
+import { DialogTitle } from "@mui/material";
+import { DialogContent } from "@mui/material";
+import { DialogContentText } from "@mui/material";
+import { DialogActions } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useData } from "../context/context";
+
 interface FormData {
   itemId: string;
   itemName: string;
@@ -13,6 +29,17 @@ interface FormData {
   address: string;
 }
 export const InventoryForm = () => {
+  const [createItem, { loading, error }] = useMutation(INSERT_ITEM, {
+    errorPolicy: "all",
+  });
+  const navigate = useNavigate();
+  const context = useData();
+
+  const [alert, setAlert] = useState<{
+    type: AlertColor;
+    message: string | undefined;
+  } | null>(null);
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     itemId: "",
     itemName: "",
@@ -31,7 +58,7 @@ export const InventoryForm = () => {
     setErrors({ ...errors, [name]: "" });
   };
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const newErrors: Partial<FormData> = {};
     if (!formData.itemId) {
@@ -57,7 +84,6 @@ export const InventoryForm = () => {
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length === 0) {
-      console.log(formData); //enviar info
       const {
         itemId,
         itemName,
@@ -67,9 +93,8 @@ export const InventoryForm = () => {
         address,
         phoneNumber,
       } = formData;
-      const [createItem, { data }] = useMutation(INSERT_ITEM);
-      const handleCreateItem = () => {
-        createItem({
+      try {
+        await createItem({
           variables: {
             itemId: parseInt(itemId),
             name: itemName,
@@ -79,9 +104,59 @@ export const InventoryForm = () => {
             address: address,
             phone: phoneNumber,
           },
+        }).then((response) => {
+          if (loading) {
+            setAlert({
+              type: "info",
+              message: "Agregando item...",
+            });
+          }
+          if (response.data) {
+            if (
+              response.data.createItem !== null &&
+              response.data.createItem.itemId === parseInt(formData.itemId)
+            ) {
+              setAlert({
+                type: "success",
+                message: "Item agregado con éxito",
+              });
+              setOpen(true);
+            }
+          }
+          if (response.data.createItem.itemId === -1) {
+            setAlert({
+              type: "error",
+              message: `Error al agregar el item: el itemId o el locationId ya existen`,
+            });
+          }
         });
-      };
+      } catch (error: unknown) {
+        setAlert({
+          type: "error",
+          message: (error as Error).message,
+        });
+      }
     }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const addMore = () => {
+    setFormData({
+      itemId: "",
+      itemName: "",
+      description: "",
+      locationId: "",
+      state: "",
+      address: "",
+      phoneNumber: "",
+    });
+    setOpen(false);
+  };
+  const routeInventory = () => {
+    context.setRefreshValue(true);
+    navigate("/items");
   };
 
   return (
@@ -235,6 +310,32 @@ export const InventoryForm = () => {
           >
             Enviar
           </Button>
+          <Dialog
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">
+              {"Item agregado con éxito"}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                ¿Deseas continuar agregando items?
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={addMore}>Si, Agregar más items</Button>
+              <Button onClick={routeInventory}>
+                No, regresar al inventario
+              </Button>
+            </DialogActions>
+          </Dialog>
+          {alert && (
+            <Alert severity={alert.type} onClose={() => setAlert(null)}>
+              {alert.message}
+            </Alert>
+          )}
         </form>
       </Container>
     </>
