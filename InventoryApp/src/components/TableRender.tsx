@@ -92,7 +92,6 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
   };
 
   const deleteSpecificItem = (id: number) => {
-    console.log(id);
     try {
       deleteItem({
         variables: {
@@ -171,6 +170,7 @@ export const TableRender: React.FC<TableProps> = ({ data, filter }) => {
                     </DialogContent>
                     <DialogActions>
                       <Button
+                        data-testid={"delete" + itemId.toString()}
                         onClick={() => deleteSpecificItem(itemId)}
                         variant="outlined"
                         color="error"

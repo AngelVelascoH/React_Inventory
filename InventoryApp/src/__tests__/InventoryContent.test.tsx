@@ -3,52 +3,60 @@ import { render } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import { InventoryContent } from "../components/InventoryContent";
 import { DataProvider } from "../context/context";
-import { ApolloProvider } from "@apollo/client";
-import client from "../apollo/client";
+import GET_DATA from "../apollo/fetchSpecificDataAllItems";
 
-jest.mock("@apollo/client", () => ({
-  useQuery: jest.fn(() => ({
-    loading: false,
-    error: null,
-    data: {
-      /* datos simulados */
+import { MockedProvider } from "@apollo/client/testing";
+import { MemoryRouter } from "react-router-dom";
+
+it(" Renderiza Componentes e Items", async () => {
+  const dataMock = {
+    delay: 30,
+    request: {
+      query: GET_DATA,
     },
-    refetch: jest.fn(),
-  })),
-}));
-
-test("maneja la carga", () => {
+    result: {
+      data: {
+        Items: [
+          // Agrega la lista de Items
+          { itemId: 1, itemName: "Item 1" },
+          { itemId: 2, itemName: "Item 2" },
+          { itemId: 3, itemName: "Item 3" },
+        ],
+      },
+    },
+  };
   render(
-    <ApolloProvider client={client}>
+    <MemoryRouter>
       <DataProvider>
-        <InventoryContent />
+        <MockedProvider mocks={[dataMock]} addTypename={false}>
+          <InventoryContent />
+        </MockedProvider>
       </DataProvider>
-    </ApolloProvider>
+    </MemoryRouter>
   );
-  const label = screen.getByText("Loading...");
-  expect(label).toBeInTheDocument();
+  expect(await screen.findByText("Loading...")).toBeInTheDocument();
+  expect(await screen.findByText("Item 1")).toBeInTheDocument();
+  expect(await screen.findByText("Item 2")).toBeInTheDocument();
+  expect(await screen.findByText("Item 3")).toBeInTheDocument();
 });
 
-test("maneja errores", () => {
-  jest.spyOn(console, "error").mockImplementation(() => {});
-  const error = new Error("Simulated Error");
-  jest.spyOn(console, "error").mockImplementation(() => {});
-  jest.mock("@apollo/client", () => ({
-    useQuery: jest.fn(() => ({
-      loading: false,
-      error: error,
-      data: null,
-      refetch: jest.fn(),
-    })),
-  }));
-
+it("Debería mostrar un error en la UI", async () => {
+  const errorMock = {
+    delay: 30,
+    request: {
+      query: GET_DATA,
+    },
+    error: new Error("Error interno"),
+  };
   render(
-    <ApolloProvider client={client}>
+    <MemoryRouter>
       <DataProvider>
-        <InventoryContent />
+        <MockedProvider mocks={[errorMock]} addTypename={false}>
+          <InventoryContent />
+        </MockedProvider>
       </DataProvider>
-    </ApolloProvider>
+    </MemoryRouter>
   );
-  const label = screen.getByText("Error interno:");
-  expect(label).toBeInTheDocument();
+  expect(await screen.findByText("Loading...")).toBeInTheDocument();
+  expect(await screen.findByText("Error interno:")).toBeInTheDocument();
 });
